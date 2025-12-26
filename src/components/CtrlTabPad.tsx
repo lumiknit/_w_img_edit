@@ -5,7 +5,7 @@ import toast from 'solid-toast';
 import { runActionPad } from '../actions/pad';
 
 const CtrlTabPad: Component = () => {
-	const [extendColor, setExtendColor] = createSignal(false);
+	const [stretchBoundary, setStretchBoundary] = createSignal(false);
 	const [color, setColor] = createSignal('#00000000');
 
 	let inputLeftRef: HTMLInputElement;
@@ -23,7 +23,7 @@ const CtrlTabPad: Component = () => {
 		const top = Number(inputTopRef!.value) || 0;
 		const bottom = Number(inputBottomRef!.value) || 0;
 		let c: string | undefined = undefined;
-		if (!extendColor()) {
+		if (!stretchBoundary()) {
 			c = color();
 		}
 		const result = await runActionPad(
@@ -105,15 +105,15 @@ const CtrlTabPad: Component = () => {
 					<label class="checkbox">
 						<input
 							type="checkbox"
-							checked={extendColor()}
-							onChange={() => setExtendColor((c) => !c)}
+							checked={stretchBoundary()}
+							onChange={() => setStretchBoundary((c) => !c)}
 						/>
 						Extend Boundary Color
 					</label>
 				</div>
 			</div>
 
-			<Show when={!extendColor()}>
+			<Show when={!stretchBoundary()}>
 				<div class="field">
 					<label class="label">Color</label>
 					<div class="control">
