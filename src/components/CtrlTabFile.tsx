@@ -5,6 +5,10 @@ import { getMainCanvas, setToMainCanvas } from '../state';
 const CtrlTabFile: Component = () => {
 	const [selectedFileName, setSelectedFileName] =
 		createSignal('No file selected');
+	const [downloadFormat, setDownloadFormat] = createSignal<
+		'png' | 'jpg' | 'webp'
+	>('png');
+	const [quality, setQuality] = createSignal(92);
 
 	const fileReader = (file: File) =>
 		new Promise<string>((resolve, reject) => {
@@ -61,11 +65,28 @@ const CtrlTabFile: Component = () => {
 			toast.error('저장할 캔버스가 없습니다.');
 			return;
 		}
+		const format = downloadFormat();
+		const mime =
+			format === 'jpg'
+				? 'image/jpeg'
+				: format === 'webp'
+					? 'image/webp'
+					: 'image/png';
+		const needsQuality = format !== 'png';
 		const link = document.createElement('a');
-		link.href = canvas.toDataURL('image/png');
-		link.download = `canvas-${Date.now()}.png`;
+		link.href = canvas.toDataURL(
+			mime,
+			needsQuality ? Math.min(1, Math.max(0, quality() / 100)) : undefined
+		);
+		link.download = `canvas-${Date.now()}.${format}`;
 		link.click();
-		toast.success('PNG로 저장했습니다.');
+		const successLabel =
+			format === 'jpg'
+				? 'JPG로 저장했습니다.'
+				: format === 'webp'
+					? 'WebP로 저장했습니다.'
+					: 'PNG로 저장했습니다.';
+		toast.success(successLabel);
 	};
 
 	return (
@@ -86,6 +107,58 @@ const CtrlTabFile: Component = () => {
 						<span class="file-name">{selectedFileName()}</span>
 					</label>
 				</div>
+			</div>
+			<div class="field">
+				<label class="label is-size-6">저장 포맷</label>
+				<div class="control">
+					<div class="select is-fullwidth">
+						<select
+							value={downloadFormat()}
+							onChange={(event) =>
+								setDownloadFormat(
+									event.currentTarget.value as
+										| 'png'
+										| 'jpg'
+										| 'webp'
+								)
+							}
+						>
+							<option value="png">PNG</option>
+							<option value="jpg">JPG</option>
+							<option value="webp">WebP</option>
+						</select>
+					</div>
+				</div>
+			</div>
+			<div class="field">
+				<label class="label is-size-6">품질 (JPG / WebP)</label>
+				<div class="control">
+					<input
+						class="is-fullwidth"
+						type="range"
+						min="10"
+						max="100"
+						step="1"
+						value={quality()}
+						onInput={(event) =>
+							setQuality(
+								Math.min(
+									100,
+									Math.max(
+										10,
+										Number(event.currentTarget.value) || 10
+									)
+								)
+							)
+						}
+						disabled={downloadFormat() === 'png'}
+					/>
+				</div>
+				<p class="help is-size-7">
+					{downloadFormat() === 'png'
+						? 'PNG는 무손실 포맷이라 품질 설정이 필요 없습니다.'
+						: `현재 품질: ${quality()}%`}
+				</p>
 			</div>
 			<button
 				class="button is-link is-fullwidth"
